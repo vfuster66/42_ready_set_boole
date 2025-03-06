@@ -1,0 +1,6 @@
+pytest
+colorama
+typing
+pytest-cov
+graphviz
+sympy
