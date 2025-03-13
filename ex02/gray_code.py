@@ -12,15 +12,3 @@ def gray_code(n: int) -> int:
         raise ValueError("The input must be a non-negative integer.")
 
     return n ^ (n >> 1)
-
-
-if __name__ == "__main__":
-    import sys
-    if len(sys.argv) != 2:
-        print("Usage: python gray_code.py <n>")
-    else:
-        try:
-            n = int(sys.argv[1])
-            print(f"Gray code of {n} = {gray_code(n)}")
-        except ValueError:
-            print("Error: Please provide a valid non-negative integer.")

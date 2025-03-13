@@ -135,13 +135,3 @@ def conjunctive_normal_form(formula: str) -> str:
         return to_rpn(cnf_tree)
     except ValueError as e:
         raise ValueError(str(e))
-
-
-if __name__ == "__main__":
-    print(conjunctive_normal_form("AB&!"))
-    print(conjunctive_normal_form("AB|!"))
-    print(conjunctive_normal_form("AB|C&"))
-    print(conjunctive_normal_form("AB|C|D|"))
-    print(conjunctive_normal_form("AB&C&D&"))
-    print(conjunctive_normal_form("AB&!C!|"))
-    print(conjunctive_normal_form("AB|!C!&"))

@@ -1,28 +1,24 @@
-import sys
-import ast
-
-
-def set_evaluation(formula: str, sets: list[set[int]]) -> set[int]:
+def eval_set(formula: str, sets: list[set[int]]) -> set[int]:
     """
     Évalue une formule en notation polonaise inversée (RPN)
     avec des ensembles donnés.
 
     Args:
         formula (str): La formule logique en RPN.
-        sets (list[set[int]]):
-        Liste des ensembles associés aux variables A, B, ...
+        sets (list[set[int]]): Liste des ensembles associés aux variables A, B,
+        etc.
 
     Returns:
         set[int]: L'ensemble résultant de l'évaluation.
     """
-
     variables = sorted(set(c for c in formula if 'A' <= c <= 'Z'))
+
     if len(variables) != len(sets):
         raise ValueError("Erreur: Nombre d'ensembles fourni incorrect.")
 
-    values = dict(zip(variables, sets))
+    values = dict(zip(variables, [set(s) for s in sets]))
 
-    universe = set().union(*sets)
+    universe = set().union(*values.values())
 
     stack = []
     for char in formula:
@@ -35,6 +31,7 @@ def set_evaluation(formula: str, sets: list[set[int]]) -> set[int]:
                 )
             b = stack.pop()
             a = stack.pop()
+
             if char == '&':
                 result = a & b
             elif char == '|':
@@ -45,7 +42,9 @@ def set_evaluation(formula: str, sets: list[set[int]]) -> set[int]:
                 result = (universe - a) | b
             elif char == '=':
                 result = ((universe - a) | b) & ((universe - b) | a)
+
             stack.append(result)
+
         elif char == '!':
             if not stack:
                 raise ValueError(
@@ -53,6 +52,7 @@ def set_evaluation(formula: str, sets: list[set[int]]) -> set[int]:
                 )
             a = stack.pop()
             stack.append(universe - a)
+
         else:
             raise ValueError(f"Caractère invalide dans la formule: '{char}'.")
 
@@ -60,21 +60,3 @@ def set_evaluation(formula: str, sets: list[set[int]]) -> set[int]:
         raise ValueError("Formule invalide: trop d'opérandes.")
 
     return stack[0]
-
-
-if __name__ == "__main__":
-    if len(sys.argv) != 3:
-        print("Usage: python set_evaluation.py \"FORMULE\" \"[{1,2}, {3,4}]\"")
-    else:
-        try:
-            formula = sys.argv[1]
-            sets_input = ast.literal_eval(sys.argv[2])
-            if not isinstance(sets_input, list) or not all(
-                isinstance(s, set) for s in sets_input
-            ):
-                raise ValueError
-            universe = set().union(*sets_input)
-            print(set_evaluation(formula, sets_input))
-        except (ValueError, SyntaxError):
-            print("Erreur: Veuillez entrer une formule valide et une liste "
-                  "d'ensembles.")

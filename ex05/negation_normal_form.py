@@ -143,15 +143,3 @@ def negation_normal_form(formula: str) -> str:
         return to_rpn(nnf_tree)
     except ValueError as e:
         raise ValueError(str(e))
-
-
-if __name__ == "__main__":
-    print(negation_normal_form("AB&!"))
-    print(negation_normal_form("AB|!"))
-    print(negation_normal_form("AB>"))
-    print(negation_normal_form("AB="))
-    print(negation_normal_form("AB|C&!"))
-    print(negation_normal_form("ABC&|D!"))
-    print(negation_normal_form("A!B!C&|"))
-    print(negation_normal_form("AB|C="))
-    print(negation_normal_form("AB=!"))

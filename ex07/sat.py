@@ -1,89 +1,100 @@
-import itertools
+def eval_formula(formula: str, values: dict) -> bool:
+    """Évalue une formule booléenne en RPN
+    avec un dictionnaire d'assignations."""
+    stack = []
+    operators = {"!", "&", "|", "^", ">", "="}
+
+    for char in formula:
+        if char in values:
+            stack.append(values[char])
+        elif char == "0":
+            stack.append(False)
+        elif char == "1":
+            stack.append(True)
+        elif char in operators:
+            if char == "!":
+                if len(stack) < 1:
+                    raise ValueError(f"Pas assez d'opérandes pour '{char}'")
+                operand = stack.pop()
+                stack.append(not operand)
+            else:
+                if len(stack) < 2:
+                    raise ValueError(f"Pas assez d'opérandes pour '{char}'")
+                right = stack.pop()
+                left = stack.pop()
+
+                if char == "&":
+                    stack.append(left and right)
+                elif char == "|":
+                    stack.append(left or right)
+                elif char == "^":
+                    stack.append(left != right)
+                elif char == ">":
+                    stack.append((not left) or right)
+                elif char == "=":
+                    stack.append(left == right)
+        else:
+            raise ValueError(f"Caractère invalide : '{char}'")
+
+    if len(stack) != 1:
+        raise ValueError("Formule invalide : mauvaise structure (stack != 1)")
+
+    return stack[0]
+
+
+def validate_formula(formula: str):
+    """Valide la structure de la formule RPN."""
+    stack_size = 0
+    operators = {"!", "&", "|", "^", ">", "="}
+
+    for char in formula:
+        if char in "01ABCDEFGHIJKLMNOPQRSTUVWXYZ":
+            stack_size += 1
+        elif char in operators:
+            if char == "!":
+                if stack_size < 1:
+                    raise ValueError(f"Pas assez d'opérandes pour '{char}'")
+                # une opération unaire : pile inchangée
+            else:
+                if stack_size < 2:
+                    raise ValueError(f"Pas assez d'opérandes pour '{char}'")
+                stack_size -= 1
+        else:
+            raise ValueError(f"Caractère invalide : '{char}'")
+
+    if stack_size != 1:
+        raise ValueError(
+            "Formule invalide : mauvaise structure (stack != 1 à la fin)"
+        )
 
 
 def sat(formula: str) -> bool:
-    """
-    Détermine si une formule logique en notation
-    polonaise inversée (RPN) est satisfiable.
-    Args:
-    formula (str): La formule en notation polonaise inversée.
-    Returns:
-    bool: True si la formule est satisfiable, False sinon.
-    """
-
-    if formula == "AB>!":
-        return False
+    """Détermine si la formule est satisfiable."""
 
     if not formula:
         raise ValueError("Formule vide")
 
-    valid_chars = set("ABCDEFGHIJKLMNOPQRSTUVWXYZ&|^>=!")
-    if not all(c in valid_chars for c in formula):
-        raise ValueError("Caractères invalides dans la formule")
+    # Nettoyage des espaces
+    formula = formula.replace(" ", "")
 
-    if formula in ["", "A!", "ABC|", "A>"]:
-        raise ValueError("Structure de formule invalide")
+    # Validation de la structure
+    validate_formula(formula)
 
-    variables = sorted(set(c for c in formula if 'A' <= c <= 'Z'))
+    # Extraction des variables
+    variables = sorted(set([c for c in formula if c.isalpha()]))
+
+    # Cas où il n'y a pas de variables
     if not variables:
-        raise ValueError("Aucune variable détectée")
+        return eval_formula(formula, {})
 
-    def evaluate_rpn(rpn, values):
-        stack = []
-        for char in rpn:
-            if char in values:
-                stack.append(values[char])
-            elif char == '!':
-                if len(stack) < 1:
-                    raise ValueError(
-                        "Formule invalide: pas assez d'opérandes pour '!'."
-                        )
-                stack.append(not stack.pop())
-            elif char in "&|^>=":
-                if len(stack) < 2:
-                    raise ValueError(
-                        f"Formule invalide: pas assez d'opérandes pour "
-                        f"'{char}'."
-                        )
-                b = stack.pop()
-                a = stack.pop()
-                if char == '&':
-                    stack.append(a and b)
-                elif char == '|':
-                    stack.append(a or b)
-                elif char == '^':
-                    stack.append(a != b)
-                elif char == '>':
-                    stack.append((not a) or b)
-                elif char == '=':
-                    stack.append(a == b)
-            else:
-                raise ValueError(
-                    f"Caractère invalide dans la formule: '{char}'."
-                    )
+    nb_vars = len(variables)
 
-        if len(stack) != 1:
-            raise ValueError("Formule invalide: trop d'opérandes.")
+    # Énumération de toutes les assignations possibles
+    for i in range(2 ** nb_vars):
+        combo = [(variables[j], bool((i >> j) & 1)) for j in range(nb_vars)]
+        values = dict(combo)
 
-        return stack[0]
-
-    for values_tuple in itertools.product(
-            [False, True], repeat=len(variables)):
-        values_dict = dict(zip(variables, values_tuple))
-
-        try:
-            if not evaluate_rpn(formula, values_dict):
-                continue
+        if eval_formula(formula, values):
             return True
-        except ValueError:
-            return False
 
     return False
-
-
-if __name__ == "__main__":
-    print(sat("AB|"))
-    print(sat("AB&"))
-    print(sat("AA!&"))
-    print(sat("AA^"))
-    print(sat("AB>!"))

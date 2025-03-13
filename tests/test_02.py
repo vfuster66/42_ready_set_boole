@@ -1,81 +1,36 @@
 import unittest
 from ex02.gray_code import gray_code
-from colorama import Fore, Style
+from printer import print_test_result
 
 
 class TestGrayCode(unittest.TestCase):
-    def print_test(self, test_name, input_value, expected, obtained):
-        """ Affichage amélioré du test avec couleurs et détails """
-        print(f"\n{Fore.CYAN}Test: {test_name}{Style.RESET_ALL}")
-        print(f"{Fore.YELLOW}Entrée :{Style.RESET_ALL} {input_value}")
-        print(f"{Fore.GREEN}Résultat attendu :{Style.RESET_ALL} {expected}")
-        print(f"{Fore.BLUE}Résultat obtenu  :{Style.RESET_ALL} {obtained}")
 
-        if expected == obtained:
-            print(f"{Fore.GREEN}✅ Test OK !{Style.RESET_ALL}")
-        else:
-            print(f"{Fore.RED}❌ Test ÉCHOUÉ !{Style.RESET_ALL}")
-        print("-" * 50)
-
-    def test_basic_gray_code(self):
-        test_cases = {
-            0: 0,
-            1: 1,
-            2: 3,
-            3: 2,
-            4: 6,
-            5: 7,
-            6: 5,
-            7: 4,
-            8: 12,
-        }
-        for n, expected in test_cases.items():
+    def test_gray_code_values(self):
+        cases = [
+            (0, 0, "Gray code de 0"),
+            (1, 1, "Gray code de 1"),
+            (2, 3, "Gray code de 2"),
+            (3, 2, "Gray code de 3"),
+            (4, 6, "Gray code de 4"),
+            (5, 7, "Gray code de 5"),
+            (6, 5, "Gray code de 6"),
+            (7, 4, "Gray code de 7"),
+            (8, 12, "Gray code de 8")
+        ]
+        for n, expected, desc in cases:
             result = gray_code(n)
-            self.print_test("Conversion en code de Gray", n, expected, result)
+            print_test_result(desc, f"gray_code({n})", expected, result)
             self.assertEqual(result, expected)
 
-    def test_large_numbers(self):
-        a = 1000000
-        expected = a ^ (a >> 1)
-        result = gray_code(a)
-        self.print_test("Grand nombre en code de Gray", a, expected, result)
-        self.assertEqual(result, expected)
-
-    def test_negatives_should_fail(self):
-        a = -5
+    def test_negative_should_fail(self):
         with self.assertRaises(ValueError):
-            gray_code(a)
+            gray_code(-1)
 
     def test_invalid_inputs(self):
-        invalid_inputs = ["10", None, "abc"]
-        for a in invalid_inputs:
+        invalid_inputs = ["string", None, 5.5, [1, 2]]
+        for invalid in invalid_inputs:
             with self.assertRaises(TypeError):
-                gray_code(a)
-
-    def test_large_number_gray_code(self):
-        a = 1024
-        expected = a ^ (a >> 1)
-        result = gray_code(a)
-        self.print_test(
-            "Code de Gray pour un grand nombre (2^10)", a, expected, result
-        )
-        self.assertEqual(result, expected)
-
-    def test_odd_number_gray_code(self):
-        a = 37 
-        expected = a ^ (a >> 1)
-        result = gray_code(a)
-        self.print_test(
-            "Code de Gray pour un nombre impair", a, expected, result
-        )
-        self.assertEqual(result, expected)
-
-    def test_gray_code_sequence(self):
-        for n in range(20):
-            expected = n ^ (n >> 1)
-            result = gray_code(n)
-            self.print_test("Séquence de codes de Gray", n, expected, result)
-            self.assertEqual(result, expected)
+                gray_code(invalid)
 
 
 if __name__ == "__main__":

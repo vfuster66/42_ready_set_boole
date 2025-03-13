@@ -1,83 +1,50 @@
 import unittest
 from ex07.sat import sat
-from colorama import Fore, Style
+from printer import print_test_result, print_title
 
 
-class TestSAT(unittest.TestCase):
-    def print_test(self, test_name, formula, expected, obtained):
-        """ Affichage amélioré du test avec couleurs et détails """
-        print(f"\n{Fore.CYAN}Test: {test_name}{Style.RESET_ALL}")
-        print(f"{Fore.YELLOW}Formule :{Style.RESET_ALL} {formula}")
-        print(f"{Fore.GREEN}Résultat attendu :{Style.RESET_ALL} {expected}")
-        print(f"{Fore.BLUE}Résultat obtenu :{Style.RESET_ALL} {obtained}")
-        if expected == obtained:
-            print(f"{Fore.GREEN}✅ Test OK !{Style.RESET_ALL}")
-        else:
-            print(f"{Fore.RED}❌ Test ÉCHOUÉ !{Style.RESET_ALL}")
-        print("-" * 50)
+class TestSatSolver(unittest.TestCase):
 
-    def test_basic_sat(self):
-        test_cases = {
-            "AB|": True,
-            "AB&": True,
-            "AA!&": False,
-            "AA^": False
-        }
-        for formula, expected in test_cases.items():
+    def test_satisfiable_cases(self):
+        cases = [
+            ("A", True, "A est satisfiable"),
+            ("A!", True, "¬A est satisfiable"),
+            ("AB|", True, "A ∨ B est satisfiable"),
+            ("AB&C|", True, "(A ∧ B) ∨ C est satisfiable"),
+        ]
+
+        print_title("Tests SAT : Formules satisfaisables")
+
+        for formula, expected, desc in cases:
             result = sat(formula)
-            self.print_test("Test SAT basique", formula, expected, result)
+            print_test_result(desc, f"sat('{formula}')", expected, result)
             self.assertEqual(result, expected)
 
-    def test_complex_sat(self):
-        test_cases = {
-            "ABC|&": True,
-            "A!B!|": True,
-            "AB&C|!": True
-        }
-        for formula, expected in test_cases.items():
+    def test_unsatisfiable_cases(self):
+        cases = [
+            ("A A!&", False, "A ∧ ¬A : insatisfiable"),
+            ("A A!|!", False, "¬(A ∨ ¬A) : insatisfiable"),
+            ("A A!&B B!&|", False, "(A ∧ ¬A) ∨ (B ∧ ¬B) : insatisfiable"),
+        ]
+
+        print_title("Tests SAT : Formules insatisfaisables")
+
+        for formula, expected, desc in cases:
             result = sat(formula)
-            self.print_test("Test SAT complexe", formula, expected, result)
+            print_test_result(desc, f"sat('{formula}')", expected, result)
             self.assertEqual(result, expected)
 
-    def test_invalid_sat(self):
-        invalid_cases = ["", "A!", "ABC|", "A>"]
-        for formula in invalid_cases:
+    def test_invalid_formulas(self):
+        invalid_formulas = [
+            "",        # Vide
+            "A>",      # Pas assez d'opérandes
+            "AB|>",    # Pas assez d'opérandes après opérateur
+            "A#",      # Caractère non valide
+        ]
+
+        for formula in invalid_formulas:
             with self.assertRaises(ValueError):
                 sat(formula)
-
-    def test_always_false(self):
-        formula = "AB&A!"
-        expected = False
-        result = sat(formula)
-        self.print_test("Formule toujours fausse", formula, expected, result)
-        self.assertEqual(result, expected)
-
-    def test_always_true(self):
-        formula = "AA|!"
-        expected = True
-        result = sat(formula)
-        self.print_test(
-            "Formule toujours vraie (tautologie)", formula, expected, result
-            )
-        self.assertEqual(result, expected)
-
-    def test_implication(self):
-        formula = "AB>!"
-        expected = False
-        result = sat(formula)
-        self.print_test(
-            "Négation d'une implication", formula, expected, result
-            )
-        self.assertEqual(result, expected)
-
-    def test_equivalence(self):
-        formula = "AB="
-        expected = True
-        result = sat(formula)
-        self.print_test(
-            "Équivalence entre deux variables", formula, expected, result
-            )
-        self.assertEqual(result, expected)
 
 
 if __name__ == "__main__":

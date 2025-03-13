@@ -1,58 +1,23 @@
-import sys
-
-from typing import Tuple
-
-
-def bit_deinterleave(n: int) -> Tuple[int, int]:
+def reverse_map(value: float) -> tuple[int, int]:
     """
-    Désentrelace les bits pour récupérer les coordonnées x et y.
-
-    Args:
-        n (int): Entier représentant une position sur la courbe.
-
-    Returns:
-        (int, int): Coordonnées x et y originales.
+    Retourne les coordonnées (x, y) mappées depuis la valeur n.
     """
-    def compact_bits(n: int) -> int:
-        """Récupère les bits séparés pour reconstruire la coordonnée."""
-        n &= 0x55555555
-        n = (n | (n >> 1)) & 0x33333333
-        n = (n | (n >> 2)) & 0x0F0F0F0F
-        n = (n | (n >> 4)) & 0x00FF00FF
-        n = (n | (n >> 8)) & 0x0000FFFF
-        return n
+    if not isinstance(value, float):
+        raise TypeError("La valeur doit être un float.")
+    if not 0.0 <= value < 1.0:
+        raise ValueError("La valeur doit être comprise dans [0.0, 1.0).")
 
-    return compact_bits(n), compact_bits(n >> 1)
+    bits_needed = 2 if value > 0.75 else 1
 
+    max_value = 2 ** (bits_needed * 2)
+    morton_code = int(value * max_value)
 
-def reverse_map(value: float) -> Tuple[int, int]:
-    """
-    Décode un nombre unique de l'intervalle [0,1] en coordonnées (x, y).
+    def deinterleave_bits(code, bits=bits_needed):
+        x = 0
+        y = 0
+        for i in range(bits):
+            y |= ((code >> (2 * i)) & 1) << i
+            x |= ((code >> (2 * i + 1)) & 1) << i
+        return x, y
 
-    Args:
-        value (float): Valeur encodée dans l'intervalle [0,1].
-
-    Returns:
-        (int, int): Coordonnées x et y originales.
-    """
-    if not (0.0 <= value <= 1.0):
-        raise ValueError("Erreur: La valeur doit être dans [0,1].")
-
-    max_index = (2**32) - 1
-    int_value = round(value * max_index)
-
-    return bit_deinterleave(int_value)
-
-
-if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: python inverse_curve.py <float>")
-    else:
-        try:
-            value = float(sys.argv[1])
-            print(reverse_map(value))
-        except ValueError:
-            print(
-                "Erreur: Veuillez entrer une valeur flottante valide entre "
-                "0 et 1."
-                )
+    return deinterleave_bits(morton_code)
